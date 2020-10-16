@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều khiển thiết bị</title>
+    <script src="https://iot302.herokuapp.com/socket.io/socket.io.js"></script>
+    <script src="jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Xin chào client</h1>
+    <h2>Đây là trang điều khiển thiết bị</h2>
+    <button id="turn-on" type="button" class="btn btn-success">Bật đèn</button>
+    <button id="turn-off" type="button" class="btn btn-danger">Tắt đèn</button>
+
+    </div>
+    
+</body>
+</html>
+<script>
+  
+     var socket =io("https://iot302.herokuapp.com");  
+     $(document).ready(function () {
+        $("#turn-on").click(function(e){
+            e.preventDefault();
+            message = '{"led":"on"}';
+            socket.emit('message',message);
+        });
+        $("#turn-off").click(function(e){
+            e.preventDefault();
+            message = '{"led":"off"}';
+            socket.emit('message',message);
+        });
+    });
+
+</script>

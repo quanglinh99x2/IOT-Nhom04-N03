@@ -1,0 +1,75 @@
+
+#include <WebSockets2_Generic.h>
+
+#include <SocketIoClient.h> //SocketIoClient 0.3 and WebSockets 2.2.0
+#include <ArduinoJson.h>
+
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+
+#define USE_SERIAL Serial
+int pin = 16;
+
+const char* ssid = "Phòng 302";
+const char* pass ="23456789";
+
+SocketIoClient webSocket;
+
+
+ void setup() {
+    pinMode(pin,OUTPUT);
+    digitalWrite(pin, LOW);
+    USE_SERIAL.begin(115200);
+  
+    searchWifi();
+    connectWifi();
+    
+    webSocket.begin("iot302.herokuapp.com",80);
+
+    webSocket.on("message",handleMessage); //lang nghe server
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+webSocket.loop();
+}
+
+void handleMessage(const char* message,size_t length){
+  USE_SERIAL.println(message);
+    DynamicJsonDocument doc(1024);
+  deserializeJson(doc, message); 
+
+  String str = doc["led"];
+
+  
+  
+  if(str == "on"){
+      digitalWrite(pin, HIGH);
+  }
+  else{
+    digitalWrite(pin, LOW);
+  }
+}
+void searchWifi(){
+  int numberOfNetwork = WiFi.scanNetworks();
+  USE_SERIAL.println("--------");
+  for(int i =0 ; i<numberOfNetwork ;i++){
+    USE_SERIAL.print("Network name: ");
+    USE_SERIAL.println(WiFi.SSID(i));
+    USE_SERIAL.print("Cuong do: ");
+    USE_SERIAL.println(WiFi.RSSI(i));
+    USE_SERIAL.println("--------");
+  }
+}
+void connectWifi(){
+  WiFi.begin(ssid,pass);
+  while(WiFi.status() != WL_CONNECTED){
+    USE_SERIAL.print(".");
+    delay(700);
+  }
+  USE_SERIAL.print("");
+  USE_SERIAL.println("WiFi connected");
+  USE_SERIAL.print("IP Address : ");
+  USE_SERIAL.println(WiFi.localIP());
+  
+}
