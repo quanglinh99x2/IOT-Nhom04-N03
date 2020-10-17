@@ -1,53 +1,74 @@
-
 #include <WebSockets2_Generic.h>
 
-#include <SocketIoClient.h> //SocketIoClient 0.3 and WebSockets 2.2.0
+#include <SocketIoClient.h>
 #include <ArduinoJson.h>
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
 #define USE_SERIAL Serial
-int pin = 16;
 
-const char* ssid = "Phòng 302";
-const char* pass ="23456789";
+int pinLed[]={16,5,4}; //nhap chân esp8266
+//char* espName = "Phòng 1";
+int i,j;
+
+const char* ssid = "sharehost";
+const char* pass ="12345678";
 
 SocketIoClient webSocket;
 
 
  void setup() {
-    pinMode(pin,OUTPUT);
-    digitalWrite(pin, LOW);
+  int n;
+  n=sizeof(pinLed)/sizeof(int);
+  for(i=0;i<n;i++){
+    pinMode(pinLed[i],OUTPUT);
+    digitalWrite(pinLed[i], LOW);   
+  }
     USE_SERIAL.begin(115200);
   
     searchWifi();
     connectWifi();
     
-    webSocket.begin("iot302.herokuapp.com",80);
-
-    webSocket.on("message",handleMessage); //lang nghe server
+    webSocket.begin("192.168.1.14",80); // nhap dia chi ip or domain
+     
+    webSocket.on("message",handleMessage);
+    webSocket.on("res_led_connect",connectLed);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 webSocket.loop();
 }
-
+//nh?n yêu c?u show phòng
+void connectLed(const char* res,size_t length){
+  int n;
+  n=sizeof(pinLed)/sizeof(int); //lay so luong phan tu pinLed(num led)
+  char str[10];
+  sprintf(str, "%d", n); //convert sang string
+  USE_SERIAL.println(str);
+  webSocket.emit("ok_connect", str);//emit number led
+  webSocket.emit("ok_connect_name", "\"Phòng 1\""); // emit name room
+  
+}
 void handleMessage(const char* message,size_t length){
   USE_SERIAL.println(message);
-    DynamicJsonDocument doc(1024);
+  //convert JSON su dung ArduinoJSON
+  DynamicJsonDocument doc(1024);
   deserializeJson(doc, message); 
+  // s? ki?n b?t t?t dèn
+  String str = doc["led"]; 
+  int num =doc["num"];
+  int n;
+  n=sizeof(pinLed)/sizeof(int);
 
-  String str = doc["led"];
-
-  
-  
-  if(str == "on"){
-      digitalWrite(pin, HIGH);
-  }
-  else{
-    digitalWrite(pin, LOW);
+  for(i=0;i<n;i++){
+    if(str == "on" && num== i){
+      digitalWrite(pinLed[i], HIGH);  
+    }
+    if(str == "off" && num== i){
+      digitalWrite(pinLed[i], LOW);  
+    }
   }
 }
 void searchWifi(){
@@ -71,5 +92,5 @@ void connectWifi(){
   USE_SERIAL.println("WiFi connected");
   USE_SERIAL.print("IP Address : ");
   USE_SERIAL.println(WiFi.localIP());
-  
+ 
 }
